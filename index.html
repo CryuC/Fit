@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kalori">
+<meta name="theme-color" content="#EEF2E8">
+<title>Kalori</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2E8; --surface:#FFFFFF; --ink:#1E2A21; --muted:#66725F; --line:#D8DFD0;
+  --pist:#6E9A3A; --pist-soft:#DCE8C8; --pom:#B3263F; --pom-soft:#F4D9DE; --plum:#3B2640;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Figtree", -apple-system, "Segoe UI", system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131913; --surface:#1C241C; --ink:#E9EFE2; --muted:#9AA690; --line:#2C372B;
+    --pist:#A3C969; --pist-soft:#2B3A22; --pom:#EF6A80; --pom-soft:#43222A; --plum:#E3CFE8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131913; --surface:#1C241C; --ink:#E9EFE2; --muted:#9AA690; --line:#2C372B;
+  --pist:#A3C969; --pist-soft:#2B3A22; --pom:#EF6A80; --pom-soft:#43222A; --plum:#E3CFE8;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--pist);outline-offset:2px}
+
+.wrap{max-width:480px;margin:0 auto;padding:12px 18px 120px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.day{flex:1;text-align:center}
+.day b{display:block;font:700 1.15rem/1.2 var(--display)}
+.day span{font-size:.85rem;color:var(--muted)}
+.icon{width:44px;height:44px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;color:var(--ink)}
+.icon:active{background:var(--line)}
+.icon[disabled]{opacity:.25}
+.icon svg{width:22px;height:22px}
+
+/* plate */
+.plate{position:relative;width:min(78vw,300px);aspect-ratio:1;margin:8px auto 4px}
+.plate svg{width:100%;height:100%;transform:rotate(-90deg)}
+.plate .rim{fill:var(--surface);stroke:var(--line);stroke-width:1}
+.plate .track{fill:none;stroke:var(--pist-soft);stroke-width:18}
+.plate .fill{fill:none;stroke:var(--pist);stroke-width:18;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.plate.over .fill{stroke:var(--pom)}
+.plate .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.big{font:800 clamp(3rem,16vw,4.4rem)/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.plate.over .big{color:var(--pom)}
+.center small{color:var(--muted);font-size:.95rem;margin-top:4px}
+.sum{display:flex;justify-content:center;gap:28px;margin:6px 0 22px;color:var(--muted);font-size:.92rem}
+.sum strong{display:block;color:var(--ink);font:700 1.15rem var(--display);font-variant-numeric:tabular-nums}
+.sum div{text-align:center}
+
+/* meals */
+.meal{margin:0 0 18px}
+.meal h2{display:flex;justify-content:space-between;align-items:baseline;font:700 1.05rem var(--display);margin:0 0 6px}
+.meal h2 span{font:500 .9rem var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+.items{list-style:none;margin:0;padding:0;background:var(--surface);border-radius:14px;overflow:hidden}
+.items li{display:flex;align-items:center;gap:10px;padding:11px 8px 11px 14px;border-top:1px solid var(--line)}
+.items li:first-child{border-top:0}
+.items .n{flex:1;min-width:0;overflow-wrap:anywhere}
+.items .k{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.items .del{width:36px;height:36px;border:0;background:transparent;border-radius:50%;color:var(--muted);display:grid;place-items:center}
+.items .del:active{background:var(--pom-soft);color:var(--pom)}
+.empty{color:var(--muted);font-size:.92rem;padding:10px 14px;background:transparent;border:1px dashed var(--line);border-radius:14px}
+
+/* week */
+.week{margin-top:28px}
+.week h2{font:700 1.05rem var(--display);margin:0 0 10px}
+.bars{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:130px;padding-top:6px}
+.bar{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;border:0;background:transparent;padding:0}
+.bar i{display:block;width:100%;max-width:30px;border-radius:8px 8px 3px 3px;background:var(--pist-soft);min-height:4px;transition:height .4s}
+.bar.on i{background:var(--pist)}
+.bar.over i{background:var(--pom-soft)}
+.bar.on.over i{background:var(--pom)}
+.bar em{font-style:normal;font-size:.75rem;color:var(--muted)}
+.bar.on em{color:var(--ink);font-weight:600}
+.goal-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--muted);opacity:.5;pointer-events:none}
+
+/* add button */
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;padding:6px;border-radius:999px;background:var(--ink);box-shadow:0 8px 24px rgba(20,30,20,.25);z-index:5}
+.dock button{border:0;border-radius:999px;background:transparent;color:var(--bg);padding:11px 18px;font:700 1rem var(--display);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.dock button:first-child{background:var(--pist);color:#fff}
+.dock button:active{opacity:.8}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,15,10,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--bg);border-radius:22px 22px 0 0;max-height:88%;overflow:auto;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet.show{transform:none}
+.sheet .inner{max-width:480px;margin:0 auto}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+.sheet h3{font:700 1.3rem var(--display);margin:0 0 14px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);padding:4px;border-radius:12px;margin-bottom:14px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:9px 2px;font-size:.88rem;font-weight:500;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+label.f{display:block;font-size:.85rem;color:var(--muted);margin:0 0 5px}
+.in{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:13px 14px;font-size:1.05rem;margin-bottom:12px;-webkit-appearance:none}
+.in:focus{border-color:var(--pist);outline:none}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font:700 1.02rem var(--display)}
+.btn.main{background:var(--pist);color:#fff}
+:root[data-theme="dark"] .btn.main{color:#132012}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.main{color:#132012}}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);margin-bottom:10px}
+.btn[disabled]{opacity:.5}
+.hint{font-size:.85rem;color:var(--muted);margin:-4px 0 12px}
+.err{color:var(--pom);font-size:.9rem;margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 16px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:.88rem}
+.chip b{font-weight:600;color:var(--muted);margin-left:4px;font-variant-numeric:tabular-nums}
+.chip:active{border-color:var(--pist)}
+.est{list-style:none;margin:0 0 12px;padding:0;background:var(--surface);border-radius:14px;overflow:hidden}
+.est li{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-top:1px solid var(--line)}
+.est li:first-child{border-top:0}
+.est .n{flex:1;min-width:0;font-size:.95rem}
+.est input{width:84px;border:1.5px solid var(--line);background:var(--bg);border-radius:9px;padding:7px 8px;text-align:right;font-variant-numeric:tabular-nums}
+.sub{font:600 .9rem var(--body);color:var(--muted);margin:6px 0 8px}
+.note{font-size:.85rem;color:var(--muted);margin-top:14px}
+.burn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:-8px 0 24px}
+.burn div{background:var(--surface);border-radius:12px;padding:9px 10px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.25}
+.burn b{display:block;color:var(--ink);font:700 1rem var(--display);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.setup{display:block;width:100%;text-align:left;background:var(--pist-soft);border:0;border-radius:14px;padding:14px 16px;margin:-6px 0 24px;color:var(--ink)}
+.setup b{display:block;font:700 1rem var(--display);margin-bottom:2px}
+.setup span{font-size:.9rem;color:var(--muted)}
+.bar s{position:absolute;left:50%;transform:translateX(-50%);width:70%;max-width:36px;border-top:2px solid var(--muted);opacity:.7;text-decoration:none}
+.bar{position:relative}
+.acts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px}
+.acts button{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;text-align:left;font-size:.92rem;line-height:1.25}
+.acts button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.opts{display:grid;gap:6px;margin-bottom:14px}
+.opts button{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px;text-align:left}
+.opts button b{display:block;font-weight:600}
+.opts button span{font-size:.85rem;color:var(--muted)}
+.opts button[aria-pressed="true"]{border-color:var(--pist);box-shadow:inset 0 0 0 1px var(--pist)}
+.seg.two{grid-template-columns:1fr 1fr}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.preview{background:var(--surface);border-radius:12px;padding:12px 14px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:baseline}
+.preview b{font:800 1.5rem var(--display);font-variant-numeric:tabular-nums}
+.preview span{color:var(--muted);font-size:.9rem}
+.exr{display:block!important;padding:10px 12px!important}
+.exr .t{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.exr .t b{font-weight:600}
+.exr .t span{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.9rem;white-space:nowrap}
+.exr .g{display:flex;gap:8px;align-items:center}
+.exr .g input{flex:1;width:auto;min-width:0;text-align:left}
+.exr .g small{color:var(--muted);font-size:.8rem;white-space:nowrap}
+.loss{background:var(--pist-soft);border-radius:14px;padding:14px 16px;margin:-8px 0 24px;display:flex;align-items:center;gap:14px}
+.loss.gain{background:var(--pom-soft)}
+.loss b{font:800 1.6rem/1 var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.loss.gain b{color:var(--pom)}
+.loss p{margin:0;font-size:.9rem;line-height:1.35}
+.loss p span{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}
+.weight{margin-top:30px}
+.weight .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.weight h2{font:700 1.05rem var(--display);margin:0}
+.wbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.9rem}
+.wcard{background:var(--surface);border-radius:14px;padding:14px 14px 10px}
+.wnow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.wnow b{font:800 2.2rem/1 var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.wnow span{color:var(--muted);font-size:.9rem}
+.wchart{width:100%;height:auto;display:block;margin-top:10px;overflow:visible}
+.wchart .ln{fill:none;stroke:var(--plum);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.wchart .lbl{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.wlist{list-style:none;margin:10px 0 0;padding:0}
+.wlist li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:.95rem}
+.wlist li span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.west{font-size:.88rem;color:var(--muted);margin:8px 2px 0}
+
+/* ---- refresh ---- */
+:root{--plum2:#A58BAE;--t1:#FCEBC2;--t2:#DDEBC9;--t3:#ECDFF1;--t4:#FBDDCF;--t5:#D6E7F4;--shadow:0 1px 2px rgba(30,42,33,.05),0 8px 24px rgba(30,42,33,.06)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--plum2:#8F7597;--t1:#3B331E;--t2:#2A3922;--t3:#342739;--t4:#3D2A22;--t5:#1F303C;--shadow:0 1px 0 rgba(255,255,255,.03)}}
+:root[data-theme="dark"]{--plum2:#8F7597;--t1:#3B331E;--t2:#2A3922;--t3:#342739;--t4:#3D2A22;--t5:#1F303C;--shadow:0 1px 0 rgba(255,255,255,.03)}
+body{background:radial-gradient(120% 60% at 50% -10%,var(--pist-soft),transparent 60%) no-repeat,var(--bg)}
+.wrap{padding-bottom:130px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;margin:0 -18px 4px;padding:6px 12px;background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.day b{font-size:1.25rem;letter-spacing:-.01em}
+.day b::first-letter{text-transform:uppercase}
+
+.hero{background:var(--surface);border-radius:28px;padding:18px 18px 16px;box-shadow:var(--shadow);margin:6px 0 14px}
+.plate{width:min(68vw,250px);margin:4px auto 14px}
+.plate .rim{fill:var(--bg);stroke:none}
+.plate .inner{fill:var(--surface)}
+.plate .track{stroke:var(--pist-soft);stroke-width:14}
+.plate .fill{stroke:url(#ringGrad);stroke-width:14}
+.big{font-size:clamp(2.8rem,14vw,3.8rem)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--bg);border-radius:16px;padding:10px 14px}
+.stat span{display:flex;align-items:center;gap:7px;font-size:.85rem;color:var(--muted)}
+.stat strong{display:block;font:800 1.35rem/1.2 var(--display);font-variant-numeric:tabular-nums;margin-top:2px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.dot.e{background:var(--pist)}.dot.b{background:var(--plum)}.dot.b2{background:var(--plum2)}.dot.s{background:#E2A03F}
+.bb .bbar{display:flex;height:10px;border-radius:99px;overflow:hidden;gap:2px;background:var(--bg)}
+.bb .bbar i{display:block;min-width:4px}
+.bb .legend{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;margin-top:10px;font-size:.82rem;color:var(--muted)}
+.bb .legend span{display:flex;align-items:center;gap:6px}
+.bb .legend b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.setup{margin:0;background:var(--bg)}
+
+.loss{margin:0 0 6px;border-radius:20px;padding:14px 18px}
+.sec{font:800 1.3rem var(--display);letter-spacing:-.01em;margin:26px 2px 10px}
+.sechead{display:flex;justify-content:space-between;align-items:center;margin:26px 2px 10px}
+.sechead .sec,.weight h2.sec{margin:0;font:800 1.3rem var(--display);letter-spacing:-.01em}
+
+.mc{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
+.mh{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px}
+.ico{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:1.3rem;background:var(--t);flex:none}
+.mt{flex:1;min-width:0}
+.mt b{display:block;font:700 1.02rem var(--display)}
+.mt span{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.add{width:38px;height:38px;border-radius:50%;border:0;background:var(--bg);color:var(--ink);display:grid;place-items:center;flex:none}
+.add:active{background:var(--pist-soft)}
+.mc .items{border-radius:0;background:transparent;border-top:1px solid var(--line)}
+.mc .items li{padding:10px 8px 10px 16px}
+.items .n{font-size:.97rem}
+
+.card{background:var(--surface);border-radius:20px;box-shadow:var(--shadow);padding:16px}
+.week{margin-top:0}
+.bars{height:140px}
+.bar i{max-width:26px;border-radius:99px}
+.bar s{border-top-width:2.5px;border-color:var(--plum);opacity:.85;border-radius:2px}
+.wcard{border-radius:20px;box-shadow:var(--shadow);padding:16px}
+.wbtn{background:var(--surface);box-shadow:var(--shadow);border-color:transparent}
+.empty{border-radius:18px;padding:14px 16px;background:color-mix(in srgb,var(--surface) 55%,transparent)}
+
+.dock{background:color-mix(in srgb,var(--ink) 88%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);padding:5px;gap:4px}
+.dock button{padding:12px 20px}
+.dock button:last-child{color:var(--bg)}
+
+.sheet{border-radius:26px 26px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.12)}
+.sheet h3{display:flex;justify-content:space-between;align-items:center}
+.x{width:34px;height:34px;border-radius:50%;border:0;background:var(--surface);display:grid;place-items:center;color:var(--muted)}
+.acts button,.opts button,.in,.seg{border-radius:14px}
+.btn{border-radius:16px}
+.sugg{list-style:none;margin:-4px 0 14px;padding:0;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.sugg li button{display:flex;width:100%;align-items:center;gap:10px;padding:11px 14px;border:0;background:transparent;text-align:left;border-top:1px solid var(--line)}
+.sugg li:first-child button{border-top:0}
+.sugg li button:active{background:var(--pist-soft)}
+.sugg .n{flex:1;min-width:0}
+.sugg .n small{display:block;color:var(--muted);font-size:.8rem}
+.sugg .k{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:.92rem}
+.pk{display:flex;align-items:center;gap:10px;background:var(--pist-soft);border-radius:16px;padding:12px 12px 12px 16px;margin:-4px 0 14px}
+.pk div{flex:1;min-width:0}
+.pk b{display:block;font:700 1.05rem var(--display)}
+.pk span{font-size:.85rem;color:var(--muted)}
+.step{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.step button{width:52px;height:52px;border-radius:16px;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;box-shadow:var(--shadow);flex:none}
+.step button:active{background:var(--pist-soft)}
+.step button[disabled]{opacity:.35}
+.stepval{flex:1;display:flex;align-items:baseline;justify-content:center;gap:8px;background:var(--surface);border-radius:16px;height:52px;padding:0 12px}
+.stepval input{width:4.2ch;border:0;background:transparent;text-align:right;font:800 1.6rem/52px var(--display);font-variant-numeric:tabular-nums;padding:0}
+.stepval input:focus{outline:none}
+.stepval span{color:var(--muted);font-size:.95rem}
+.step.dim .stepval{opacity:.45}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="icon" id="prev" aria-label="Önceki gün"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="day"><b id="dayTitle">Bugün</b><span id="daySub"></span></div>
+    <button class="icon" id="next" aria-label="Sonraki gün"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="icon" id="gear" aria-label="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button>
+  </div>
+
+  <section class="hero">
+  <div class="plate" id="plate">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B9D77E"/><stop offset="1" stop-color="#5E8C2E"/></linearGradient></defs>
+      <circle class="rim" cx="100" cy="100" r="99"/>
+      <circle class="inner" cx="100" cy="100" r="70"/>
+      <circle class="track" cx="100" cy="100" r="84"/>
+      <circle class="fill" id="ring" cx="100" cy="100" r="84"/>
+    </svg>
+    <div class="center"><div class="big" id="big">0</div><small id="bigLabel">kcal kaldı</small></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span><i class="dot e"></i>Aldığın</span><strong id="eaten">0</strong></div>
+    <div class="stat"><span><i class="dot b"></i>Yaktığın</span><strong id="burnTxt">–</strong></div>
+  </div>
+  <div id="burnBox"></div>
+</section>
+  <div id="lossBox"></div>
+
+  <h2 class="sec">Öğünler</h2>
+  <div id="meals"></div>
+
+  <h2 class="sec">Hareket</h2>
+  <div id="exList"></div>
+
+  <h2 class="sec">Son 7 gün</h2>
+  <section class="card week">
+    <div class="bars" id="bars"></div>
+    <p class="hint" style="margin:12px 0 0;display:flex;gap:14px;flex-wrap:wrap"><span><i class="dot e"></i> Aldığın</span><span style="display:inline-flex;align-items:center;gap:6px"><i style="width:14px;border-top:2.5px solid var(--plum);display:inline-block"></i> Yaktığın</span></p>
+  </section>
+
+  <section class="weight" style="margin-top:0">
+    <div class="sechead"><h2 class="sec">Kilo</h2><button class="wbtn" id="wAdd">Tartıl</button></div>
+    <div id="wBox"></div>
+    <p class="west" id="wEst"></p>
+  </section>
+</div>
+
+<div class="dock">
+  <button id="fab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Yemek</button>
+  <button id="fabEx"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Spor</button>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addH">
+  <div class="inner">
+    <div class="grab"></div>
+    <h3 id="addH"><span>Yemek ekle</span><button class="x" data-close aria-label="Kapat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <div class="seg" id="seg"></div>
+    <label class="f" for="fName">Ne yedin?</label>
+    <input class="in" id="fName" placeholder="Örn. simit, mercimek çorbası, elma" autocomplete="off" enterkeyhint="next">
+    <ul class="sugg" id="sugg" hidden></ul>
+    <div id="pick" hidden>
+      <div class="pk"><div><b id="pkName"></b><span id="pkPor"></span></div><button class="x" id="pkClear" aria-label="Seçimi kaldır"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <label class="f" for="pkQty" id="pkQtyLbl">Kaç porsiyon?</label>
+      <div class="step">
+        <button id="pkMinus" aria-label="Azalt"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+        <div class="stepval"><input id="pkQty" type="text" inputmode="decimal" value="1" autocomplete="off"><span id="pkUnit">porsiyon</span></div>
+        <button id="pkPlus" aria-label="Artır"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      <div id="pkGramWrap"><label class="f" for="pkGram" id="pkGramLbl">ya da gram olarak</label>
+      <input class="in" id="pkGram" type="number" inputmode="numeric" min="1" max="3000" placeholder="Örn. 150" enterkeyhint="done"></div>
+      <div class="preview"><span>Kalori</span><b id="pkKcal">0 kcal</b></div>
+      <button class="btn main" id="pkAdd">Ekle</button>
+    </div>
+    <p class="err" id="err" hidden></p>
+    <div id="manual">
+      <p class="hint" id="manHint">Yazmaya başla, listeden seç. Listede yoksa kaloriyi kendin yaz.</p>
+      <label class="f" for="fKcal">Kalori (kcal)</label>
+      <input class="in" id="fKcal" type="number" inputmode="numeric" min="0" max="9999" placeholder="Örn. 350" enterkeyhint="done">
+      <button class="btn main" id="addOne">Ekle</button>
+    </div>
+    <div id="recentWrap" hidden>
+      <div class="sub" style="margin-top:18px">Son eklenenler</div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="exSheet" role="dialog" aria-modal="true" aria-labelledby="exH">
+  <div class="inner">
+    <div class="grab"></div>
+    <h3 id="exH"><span>Spor ekle</span><button class="x" data-close aria-label="Kapat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <p class="hint" style="margin-top:-6px">Birden fazla seçebilirsin.</p>
+    <div class="acts" id="acts"></div>
+    <ul class="est" id="exRows" hidden></ul>
+    <div class="preview" id="exPrev" hidden><span>Toplam ortalama yakılan</span><b id="exKcal">0 kcal</b></div>
+    <p class="err" id="exErr" hidden></p>
+    <button class="btn main" id="addEx">Ekle</button>
+    <p class="note">Tahmin, kilona ve aktivitenin ortalama yoğunluğuna göre yapılır. Bazal metabolizmada zaten sayılan kısım düşülür.</p>
+  </div>
+</div>
+
+<div class="sheet" id="wSheet" role="dialog" aria-modal="true" aria-labelledby="wH">
+  <div class="inner">
+    <div class="grab"></div>
+    <h3 id="wH"><span>Kilo gir</span><button class="x" data-close aria-label="Kapat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <label class="f" for="fW" id="wDate">Bugün</label>
+    <input class="in" id="fW" type="text" inputmode="decimal" placeholder="Örn. 72,4" enterkeyhint="done" autocomplete="off">
+    <p class="err" id="wErr" hidden></p>
+    <button class="btn main" id="saveW">Kaydet</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" id="delW" hidden>Bu günün kaydını sil</button>
+    <p class="note">Son tartın profilindeki kiloyu da günceller, böylece yakılan kalori hesabı güncel kalır.</p>
+  </div>
+</div>
+
+<div class="sheet" id="setSheet" role="dialog" aria-modal="true" aria-labelledby="setH">
+  <div class="inner">
+    <div class="grab"></div>
+    <h3 id="setH"><span>Profilin</span><button class="x" data-close aria-label="Kapat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
+    <div class="seg two" id="sexSeg"></div>
+    <div class="row3">
+      <div><label class="f" for="pAge">Yaş</label><input class="in" id="pAge" type="number" inputmode="numeric" min="14" max="100"></div>
+      <div><label class="f" for="pH">Boy (cm)</label><input class="in" id="pH" type="number" inputmode="numeric" min="120" max="230"></div>
+      <div><label class="f" for="pW">Kilo (kg)</label><input class="in" id="pW" type="text" inputmode="decimal"></div>
+    </div>
+    <label class="f">Spor dışında gün içinde ne kadar hareketlisin?</label>
+    <div class="opts" id="actOpts"></div>
+    <div class="preview"><span>Bazal metabolizman</span><b id="pBmr">– kcal</b></div>
+    <p class="err" id="pErr" hidden></p>
+    <button class="btn main" id="saveP">Kaydet</button>
+    <p class="note">Bazal metabolizma Mifflin-St Jeor formülüyle hesaplanır. Sonuçlar ortalama tahmindir; kişiden kişiye değişebilir. <span id="syncNote"></span></p>
+  </div>
+</div>
+
+<script>
+(function(){
+const MEALS=[["kahvalti","Kahvaltı"],["ogle","Öğle"],["aksam","Akşam"],["ara","Ara öğün"]];
+const ACTS=[["Yürüyüş",3.5],["Tempolu yürüyüş",4.3],["Koşu (hafif)",8.3],["Koşu (hızlı)",9.8],["Bisiklet",7.5],["Kondisyon bisikleti",6.8],["Yüzme",6],["Ağırlık / fitness",5],["HIIT",8],["Pilates",3],["Yoga",2.5],["Eliptik",5],["Futbol",7],["Basketbol",6.5],["Tenis",7.3],["Dans",5],["İp atlama",11],["Merdiven çıkma",8],["Diğer",0]];
+const LEVELS=[[1.2,"Çoğunlukla oturarak","Masa başı iş, az yürüme"],[1.3,"Biraz hareketli","Günde biraz yürüme, ev işleri"],[1.45,"Hareketli","Ayakta çalışma, çok yürüme"],[1.6,"Çok hareketli","Bedensel iş, gün boyu hareket"]];
+const LS="kalori-v1";
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fromKey=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const fmt=n=>Math.round(n).toLocaleString("tr-TR");
+const X='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+let state={profile:null,days:{},ex:{},recent:[],weights:{}};
+function absorb(s){
+  if(!s||typeof s!=="object")return;
+  if(s.profile&&typeof s.profile==="object")state.profile=s.profile;
+  if(s.days&&typeof s.days==="object")state.days=s.days;
+  if(s.ex&&typeof s.ex==="object")state.ex=s.ex;
+  if(Array.isArray(s.recent))state.recent=s.recent;
+  if(s.weights&&typeof s.weights==="object")state.weights=s.weights;
+}
+try{absorb(JSON.parse(localStorage.getItem(LS)))}catch(e){}
+let cur=keyOf(new Date());
+let meal=defaultMeal();
+let sample=null, base=null;
+
+function defaultMeal(){const h=new Date().getHours();if(h>=5&&h<11)return"kahvalti";if(h>=11&&h<15)return"ogle";if(h>=18&&h<22)return"aksam";return"ara"}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({profile:state.profile,days:state.days,ex:state.ex,recent:state.recent,weights:state.weights}))}catch(e){}}
+
+/* energy */
+function bmr(p){if(!p)return 0;return 10*p.weight+6.25*p.height-5*p.age+(p.sex==="m"?5:-161);}
+function exTotal(k){return (state.ex[k]||[]).reduce((s,e)=>s+(Number(e.kcal)||0),0)}
+function eatTotal(k){return (state.days[k]||[]).reduce((s,e)=>s+(Number(e.kcal)||0),0)}
+function burnParts(k){const p=state.profile;if(!p)return null;const b=bmr(p);return{bmr:b,daily:b*(p.act-1),sport:exTotal(k)};}
+function burnTotal(k){const x=burnParts(k);return x?x.bmr+x.daily+x.sport:0}
+function exKcal(met,min){const w=state.profile?state.profile.weight:0;return Math.max(0,Math.round((met-1)*w*min/60));}
+
+/* storage: this device only */
+function pushDay(){}function pushSettings(){}function pushWeights(){}
+function initCloud(){}
+
+/* built-in food list: name;portion;grams;kcal */
+const FOOD_TXT=`#Meyve
+Elma;1 orta boy;180;95
+Yeşil elma;1 orta boy;180;90
+Armut;1 orta boy;180;100
+Muz;1 orta boy;120;105
+Portakal;1 orta boy;150;70
+Mandalina;1 orta boy;90;47
+Greyfurt;yarım;150;50
+Limon;1 adet;60;17
+Kivi;1 adet;75;45
+Çilek;1 kase;150;48
+Kiraz;1 kase;140;88
+Vişne;1 kase;150;75
+Üzüm;1 kase;150;104
+Karpuz;1 dilim;300;90
+Kavun;1 dilim;250;85
+Şeftali;1 orta boy;150;60
+Nektarin;1 orta boy;140;62
+Kayısı;1 adet;35;17
+Erik;1 adet;40;18
+Yeşil erik;10 adet;100;30
+İncir;1 adet;50;37
+Nar;1 kase tane;150;125
+Ayva;1 orta boy;200;115
+Ananas;1 dilim;100;50
+Mango;1 kase;165;99
+Avokado;yarım;100;160
+Hurma;1 adet;8;23
+Medjool hurma;1 adet;24;66
+Böğürtlen;1 kase;145;62
+Ahududu;1 kase;125;65
+Yaban mersini;1 kase;150;85
+Dut;1 kase;140;60
+Trabzon hurması;1 orta boy;170;120
+Papaya;1 kase;145;62
+Kızılcık;1 kase;100;45
+Hindistan cevizi;1 dilim;45;160
+Muşmula;5 adet;60;28
+Mürdüm eriği;3 adet;90;40
+Frambuaz;1 kase;125;65
+Meyve salatası;1 kase;200;110
+Kuru kayısı;5 adet;40;96
+Kuru üzüm;1 yemek kaşığı;15;45
+Kuru incir;1 adet;20;50
+Kuru erik;5 adet;45;108
+Kuru dut;1 avuç;30;95
+Kuru hurma;3 adet;25;70
+Elma cipsi;1 avuç;25;85
+#Sebze
+Domates;1 orta boy;120;22
+Çeri domates;10 adet;170;30
+Salatalık;1 orta boy;200;30
+Yeşil biber;1 adet;30;6
+Kapya biber;1 adet;120;37
+Sivri biber;3 adet;45;10
+Havuç;1 orta boy;70;29
+Marul;1 kase;50;8
+Kıvırcık;1 kase;50;8
+Roka;1 kase;20;5
+Ispanak (çiğ);1 kase;30;7
+Tere;1 demet;30;10
+Maydanoz;1 demet;30;11
+Semizotu;1 kase;45;9
+Brokoli (haşlanmış);1 kase;150;52
+Karnabahar (haşlanmış);1 kase;125;28
+Brüksel lahanası;1 kase;90;40
+Kabak;1 orta boy;200;34
+Patlıcan;1 orta boy;250;60
+Közlenmiş patlıcan;1 adet;200;60
+Közlenmiş biber (zeytinyağlı);2 adet;80;60
+Soğan;1 orta boy;110;44
+Taze soğan;1 adet;15;5
+Sarımsak;1 diş;3;4
+Patates (haşlanmış);1 orta boy;170;147
+Patates (fırın);1 orta boy;170;160
+Tatlı patates (fırın);1 orta boy;130;117
+Mısır (haşlanmış);1 koçan;100;96
+Mısır (konserve);3 yemek kaşığı;50;40
+Bezelye (haşlanmış);1 kase;160;134
+Taze fasulye (haşlanmış);1 kase;125;44
+Mantar;1 kase;70;15
+Mantar sote;1 kase;150;120
+Pancar (haşlanmış);1 adet;100;44
+Turp;5 adet;25;4
+Beyaz lahana;1 kase;90;23
+Kırmızı lahana;1 kase;90;28
+Pırasa;1 adet;90;55
+Kereviz sapı;1 sap;40;6
+Kereviz kökü;100 g;100;42
+Enginar;1 adet;120;60
+Bamya;1 kase;100;33
+Kuşkonmaz;5 adet;80;16
+Yer elması;100 g;100;73
+Salatalık turşusu;2 adet;100;15
+Karışık turşu;1 kase;100;20
+Izgara sebze;1 porsiyon;200;120
+#Kuruyemiş ve tohum
+Badem;1 avuç;30;173
+Fındık;1 avuç;30;188
+Ceviz;1 avuç;30;196
+Ceviz içi;1 adet;5;33
+Antep fıstığı;1 avuç;30;170
+Kaju;1 avuç;30;165
+Yer fıstığı;1 avuç;30;170
+Leblebi;1 avuç;30;110
+Beyaz leblebi;1 avuç;30;120
+Kabak çekirdeği;1 avuç;30;165
+Ay çekirdeği (iç);1 avuç;30;175
+Ay çekirdeği (kabuklu);1 avuç;50;145
+Kestane (kebap);5 adet;50;122
+Çam fıstığı;1 yemek kaşığı;10;67
+Karışık kuruyemiş;1 avuç;30;175
+Chia tohumu;1 yemek kaşığı;12;58
+Keten tohumu;1 yemek kaşığı;10;53
+Susam;1 yemek kaşığı;9;52
+Hindistan cevizi rendesi;1 yemek kaşığı;5;33
+Fıstık ezmesi;1 yemek kaşığı;16;95
+Tahin;1 yemek kaşığı;15;90
+Tahin pekmez;1 yemek kaşığı;20;85
+#Kahvaltılık ve süt ürünleri
+Yumurta (haşlanmış);1 adet;50;78
+Yumurta (sahanda);1 adet;55;110
+Omlet (2 yumurta);1 porsiyon;130;220
+Menemen;1 porsiyon;250;280
+Sucuklu yumurta;1 porsiyon;150;380
+Beyaz peynir;1 dilim;30;93
+Light beyaz peynir;1 dilim;30;60
+Kaşar peyniri;1 dilim;30;110
+Tulum peyniri;1 dilim;30;110
+Ezine peyniri;1 dilim;30;90
+Dil peyniri;1 dilim;30;90
+Örgü peyniri;1 dilim;30;90
+Hellim;1 dilim;30;95
+Mozzarella;1 dilim;30;85
+Cheddar;1 dilim;30;120
+Lor peyniri;2 yemek kaşığı;50;45
+Çökelek;2 yemek kaşığı;50;55
+Labne;1 yemek kaşığı;20;45
+Krem peynir;1 yemek kaşığı;15;50
+Siyah zeytin;5 adet;20;50
+Yeşil zeytin;5 adet;20;30
+Tereyağı;1 yemek kaşığı;14;100
+Kaymak;1 yemek kaşığı;20;100
+Bal;1 yemek kaşığı;21;64
+Reçel;1 yemek kaşığı;20;50
+Pekmez;1 yemek kaşığı;20;58
+Fındık kreması;1 yemek kaşığı;19;100
+Sucuk;5 dilim;30;130
+Salam;2 dilim;20;55
+Pastırma;3 dilim;30;75
+Hindi füme;2 dilim;30;35
+Kahvaltı tabağı;1 tabak;350;450
+Yulaf ezmesi;4 yemek kaşığı;40;150
+Yulaf lapası (sütlü);1 kase;250;250
+Granola;1 kase;50;225
+Müsli;1 kase;50;180
+Mısır gevreği;1 kase;30;115
+Süt (tam yağlı);1 su bardağı;200;122
+Süt (yarım yağlı);1 su bardağı;200;94
+Badem sütü;1 su bardağı;200;30
+Yulaf sütü;1 su bardağı;200;90
+Yoğurt (tam yağlı);1 kase;200;122
+Yoğurt (yarım yağlı);1 kase;200;90
+Süzme yoğurt;1 kase;150;150
+Meyveli yoğurt;1 kase;150;140
+Ayran;1 su bardağı;200;76
+Kefir;1 su bardağı;200;110
+#Ekmek ve hamur işi
+Beyaz ekmek;1 dilim;30;80
+Tam buğday ekmeği;1 dilim;30;72
+Çavdar ekmeği;1 dilim;30;70
+Kepekli ekmek;1 dilim;30;70
+Ekşi mayalı ekmek;1 dilim;40;105
+Somun ekmek;çeyrek;60;160
+Ramazan pidesi;çeyrek;75;200
+Lavaş;1 adet;60;170
+Bazlama;1 adet;120;320
+Simit;1 adet;110;310
+Açma;1 adet;90;320
+Poğaça (peynirli);1 adet;80;280
+Pişi;1 adet;60;200
+Gözleme (peynirli);1 adet;220;550
+Gözleme (patatesli);1 adet;220;520
+Su böreği;1 dilim;150;380
+Ispanaklı börek;1 dilim;120;330
+Kıymalı börek;1 dilim;120;360
+Sigara böreği;1 adet;30;90
+Kaşarlı tost;1 adet;130;330
+Karışık tost;1 adet;160;400
+Kruvasan;1 adet;60;250
+Galeta;2 adet;20;80
+Grissini;5 adet;25;100
+Kraker;5 adet;25;120
+Pirinç patlağı;2 adet;18;70
+Yulaf krakeri;2 adet;20;85
+#Tahıl ve baklagil
+Pirinç pilavı;1 tabak;180;290
+Bulgur pilavı;1 tabak;180;250
+Haşlanmış pirinç;1 kase;160;205
+Esmer pirinç;1 kase;160;180
+Kinoa;1 kase;185;222
+Kuskus;1 tabak;180;200
+Makarna (sade);1 tabak;200;310
+Makarna (domates soslu);1 tabak;250;370
+Spagetti bolonez;1 tabak;350;520
+Fırın makarna;1 porsiyon;250;450
+Erişte;1 tabak;200;320
+Mantı;1 porsiyon;250;520
+Nohut (haşlanmış);1 kase;160;270
+Mercimek (haşlanmış);1 kase;200;230
+Barbunya (haşlanmış);1 kase;170;210
+Börülce (haşlanmış);1 kase;170;160
+Humus;2 yemek kaşığı;60;100
+Falafel;5 adet;85;280
+#Çorba
+Mercimek çorbası;1 kase;250;170
+Ezogelin çorbası;1 kase;250;170
+Yayla çorbası;1 kase;250;150
+Tarhana çorbası;1 kase;250;140
+Domates çorbası;1 kase;250;120
+Şehriye çorbası;1 kase;250;120
+Tavuk suyu çorba;1 kase;250;110
+Mantar çorbası (kremalı);1 kase;250;180
+Brokoli çorbası;1 kase;250;130
+Sebze çorbası;1 kase;250;90
+Düğün çorbası;1 kase;250;200
+İşkembe çorbası;1 kase;250;200
+Kelle paça çorbası;1 kase;250;250
+Balık çorbası;1 kase;250;150
+Tavuk çorbası (kremalı);1 kase;250;190
+#Ev yemekleri
+Kuru fasulye (etli);1 tabak;250;330
+Kuru fasulye (zeytinyağlı);1 tabak;250;270
+Nohut yemeği (etli);1 tabak;250;320
+Karnıyarık;1 adet;250;360
+İmam bayıldı;1 adet;250;280
+Musakka;1 porsiyon;250;350
+Taze fasulye (zeytinyağlı);1 tabak;200;150
+Barbunya pilaki;1 tabak;200;200
+Zeytinyağlı enginar;1 adet;180;180
+Zeytinyağlı pırasa;1 tabak;200;160
+Zeytinyağlı kereviz;1 porsiyon;180;160
+Taze bakla (zeytinyağlı);1 tabak;200;180
+Yaprak sarma (zeytinyağlı);5 adet;100;175
+Etli yaprak sarma;5 adet;125;220
+Lahana sarması;5 adet;150;220
+Biber dolması (etli);1 adet;150;190
+Biber dolması (zeytinyağlı);1 adet;120;150
+Kabak dolması;1 adet;150;170
+Türlü;1 tabak;250;200
+Ispanak yemeği;1 tabak;250;180
+Bamya yemeği;1 tabak;200;150
+Bezelye yemeği;1 tabak;250;220
+Patates yemeği (etli);1 tabak;250;280
+Kıymalı patates;1 tabak;250;300
+Mücver;3 adet;150;250
+Mercimek köftesi;5 adet;150;250
+Menemen (peynirli);1 porsiyon;280;340
+Tas kebabı;1 porsiyon;250;380
+Orman kebabı;1 porsiyon;300;400
+Etli güveç;1 porsiyon;300;400
+Hünkar beğendi;1 porsiyon;350;580
+Sulu köfte;1 tabak;300;350
+Tavuk sote;1 porsiyon;250;320
+Et sote;1 porsiyon;200;350
+Kıymalı ıspanak;1 tabak;250;220
+Fırında tavuk ve patates;1 porsiyon;350;520
+#Et ve tavuk
+Tavuk göğsü (ızgara);1 porsiyon;150;250
+Tavuk göğsü (pişmiş);100 g;100;165
+Tavuk but (fırın);1 adet;150;280
+Tavuk şiş;1 porsiyon;200;330
+Tavuk kanat;5 adet;150;320
+Tavuk pirzola;1 porsiyon;150;280
+Tavuk schnitzel;1 porsiyon;150;400
+Hindi göğsü;1 porsiyon;150;200
+Izgara köfte;5 adet;150;375
+İnegöl köfte;1 porsiyon;200;520
+Kadınbudu köfte;3 adet;180;480
+İçli köfte (kızartma);1 adet;70;200
+İçli köfte (haşlama);1 adet;70;140
+Adana kebap;1 porsiyon;180;550
+Urfa kebap;1 porsiyon;180;520
+Şiş kebap;1 porsiyon;200;460
+Beyti kebap;1 porsiyon;300;750
+Ali nazik;1 porsiyon;300;550
+İskender;1 porsiyon;400;900
+Kuzu pirzola;4 adet;160;380
+Kuzu tandır;1 porsiyon;200;520
+Dana biftek;1 porsiyon;200;440
+Bonfile;1 porsiyon;150;300
+Antrikot;1 porsiyon;200;560
+Kırmızı et (yağsız, pişmiş);100 g;100;250
+Kıyma (pişmiş);100 g;100;220
+Kavurma;100 g;100;300
+Ciğer tava;1 porsiyon;150;300
+Kokoreç;yarım ekmek;300;600
+#Balık ve deniz ürünü
+Somon (ızgara);1 porsiyon;150;310
+Somon füme;50 g;50;60
+Levrek (ızgara);1 adet;200;250
+Çipura (ızgara);1 adet;200;260
+Hamsi tava;1 porsiyon;200;460
+Hamsi buğulama;1 porsiyon;200;260
+Palamut (ızgara);1 porsiyon;200;320
+Uskumru (ızgara);1 porsiyon;150;390
+Sardalya (ızgara);1 porsiyon;150;310
+Alabalık (ızgara);1 adet;200;300
+Mezgit tava;1 porsiyon;200;400
+Lüfer (ızgara);1 porsiyon;200;300
+Ton balığı (konserve);1 kutu;80;150
+Karides (haşlanmış);1 porsiyon;150;150
+Karides güveç;1 porsiyon;200;300
+Kalamar tava;1 porsiyon;200;450
+Midye tava;1 porsiyon;150;380
+Midye dolma;5 adet;150;200
+Ahtapot (ızgara);1 porsiyon;150;245
+Balık ekmek;1 adet;300;450
+#Fast food ve sokak lezzetleri
+Lahmacun;1 adet;130;280
+Kıymalı pide;1 adet;300;750
+Kaşarlı pide;1 adet;300;800
+Kuşbaşılı pide;1 adet;300;780
+Pizza (karışık);1 dilim;120;300
+Pizza (margarita);1 dilim;110;260
+Hamburger;1 adet;220;500
+Cheeseburger;1 adet;240;550
+Islak hamburger;1 adet;120;300
+Tavuk burger;1 adet;220;480
+Patates kızartması;orta boy;117;365
+Patates kızartması (büyük);büyük boy;150;470
+Tavuk nugget;6 adet;100;280
+Sosisli sandviç;1 adet;150;290
+Tavuk döner dürüm;1 adet;300;500
+Et döner dürüm;1 adet;300;600
+Tavuk döner porsiyon;1 porsiyon;150;300
+Et döner porsiyon;1 porsiyon;150;400
+Pilav üstü tavuk döner;1 porsiyon;330;600
+Çiğ köfte dürüm;1 adet;200;350
+Çiğ köfte;5 adet;100;150
+Tantuni;1 dürüm;250;450
+Kumpir;1 adet;450;700
+Waffle;1 adet;250;650
+Krep (çikolatalı);1 adet;150;350
+#Salata ve meze
+Çoban salata;1 kase;200;120
+Mevsim salata;1 kase;150;100
+Gavurdağı salatası;1 kase;180;200
+Sezar salata (tavuklu);1 porsiyon;350;450
+Ton balıklı salata;1 porsiyon;300;350
+Patates salatası;1 kase;200;250
+Rus salatası;2 yemek kaşığı;60;150
+Kısır;1 kase;150;220
+Piyaz;1 kase;200;220
+Cacık;1 kase;200;90
+Haydari;2 yemek kaşığı;60;80
+Patlıcan salatası;2 yemek kaşığı;60;70
+Acılı ezme;2 yemek kaşığı;40;30
+Fava;2 yemek kaşığı;60;90
+Atom;2 yemek kaşığı;60;90
+Şakşuka;1 kase;150;200
+Çerkez tavuğu;2 yemek kaşığı;60;130
+#Tatlı ve atıştırmalık
+Baklava;1 dilim;35;150
+Fıstıklı baklava;1 dilim;40;170
+Künefe;1 porsiyon;200;650
+Kadayıf;1 porsiyon;100;380
+Şekerpare;1 adet;50;200
+Revani;1 dilim;100;300
+Tulumba;3 adet;60;240
+Lokma;5 adet;50;180
+Sütlaç;1 kase;180;220
+Kazandibi;1 porsiyon;150;240
+Tavuk göğsü tatlısı;1 porsiyon;150;220
+Muhallebi;1 kase;180;220
+Keşkül;1 kase;180;250
+Supangle;1 kase;180;300
+Aşure;1 kase;200;300
+İrmik helvası;1 kase;100;300
+Tahin helvası;1 dilim;40;210
+Lokum;1 adet;12;45
+Pişmaniye;1 avuç;30;150
+Güllaç;1 porsiyon;150;200
+Kabak tatlısı;1 porsiyon;150;250
+Ayva tatlısı;1 porsiyon;200;300
+Trileçe;1 dilim;150;300
+Magnolia;1 kase;150;350
+Profiterol;1 porsiyon;150;400
+Dondurma;1 top;60;125
+Maraş dondurması;1 top;60;140
+Kek;1 dilim;60;230
+Pasta (kremalı);1 dilim;120;400
+Cheesecake;1 dilim;120;400
+Brownie;1 adet;60;250
+Donut;1 adet;70;250
+Kurabiye;1 adet;20;95
+Bisküvi;2 adet;16;70
+Sütlü çikolata;4 kare;20;110
+Bitter çikolata;4 kare;20;120
+Çikolatalı gofret;1 adet;35;185
+Çikolatalı bar;1 adet;50;240
+Protein bar;1 adet;60;220
+Cips;1 küçük paket;35;190
+Patlamış mısır;1 kase;30;130
+#İçecek
+Su;1 su bardağı;200;0
+Çay (şekersiz);1 bardak;100;2
+Çay (1 şekerli);1 bardak;100;20
+Türk kahvesi (sade);1 fincan;65;5
+Türk kahvesi (orta);1 fincan;65;30
+Filtre kahve;1 kupa;240;5
+Espresso;1 shot;30;3
+Americano;1 orta boy;350;10
+Latte;1 orta boy;350;190
+Cappuccino;1 orta boy;300;130
+Hazır kahve (3'ü 1 arada);1 paket;18;80
+Salep;1 bardak;250;230
+Sıcak çikolata;1 kupa;250;250
+Portakal suyu (taze);1 su bardağı;200;90
+Meyve suyu (kutu);1 kutu;200;100
+Kola;1 kutu;330;139
+Kola (şekersiz);1 kutu;330;1
+Gazoz;1 kutu;330;140
+Maden suyu;1 şişe;200;0
+Limonata;1 bardak;250;120
+Buzlu çay;1 kutu;330;100
+Şalgam suyu;1 bardak;250;20
+Boza;1 bardak;250;230
+Enerji içeceği;1 kutu;250;115
+Smoothie;1 bardak;300;180
+Protein tozu (suyla);1 ölçek;30;120
+Bira;1 kutu;500;215
+Şarap;1 kadeh;150;125
+Rakı;1 tek;50;120
+Viski;1 tek;40;95
+Votka;1 tek;40;90
+#Sos ve yağ
+Zeytinyağı;1 yemek kaşığı;13;115
+Ayçiçek yağı;1 yemek kaşığı;13;115
+Ketçap;1 yemek kaşığı;17;20
+Mayonez;1 yemek kaşığı;14;95
+Hardal;1 tatlı kaşığı;5;3
+Nar ekşisi;1 yemek kaşığı;20;50
+Domates salçası;1 yemek kaşığı;16;13
+Biber salçası;1 yemek kaşığı;20;18
+Pesto;1 yemek kaşığı;15;70
+Krema;1 yemek kaşığı;15;50
+Şeker;1 tatlı kaşığı;5;20
+Küp şeker;1 adet;3;12`;
+const FOODS=[];let cat="";
+FOOD_TXT.split("\n").forEach(l=>{l=l.trim();if(!l)return;if(l[0]==="#"){cat=l.slice(1);return;}const [n,p,g,k]=l.split(";");FOODS.push({n,p,g:Number(g),k:Number(k),c:cat});});
+const norm=t=>t.toLocaleLowerCase("tr").replace(/[çğıöşüâîû]/g,c=>({ç:"c",ğ:"g",ı:"i",ö:"o",ş:"s",ü:"u",â:"a",î:"i",û:"u"})[c]).replace(/[^a-z0-9 ]/g," ");
+FOODS.forEach(f=>{f.s=norm(f.n);f.w=f.s.split(/\s+/).filter(Boolean);});
+function searchFoods(q){const words=norm(q).split(/\s+/).filter(Boolean);if(!words.length)return[];
+  const hits=[];FOODS.forEach(f=>{if(!words.every(w=>f.s.includes(w)))return;
+    let sc=0;if(f.s.startsWith(words[0]))sc+=3;if(words.every(w=>f.w.some(x=>x.startsWith(w))))sc+=2;sc-=f.n.length/100;hits.push([sc,f]);});
+  return hits.sort((a,b)=>b[0]-a[0]).slice(0,8).map(h=>h[1]);}
+
+function render(){
+  const today=keyOf(new Date());
+  const d=fromKey(cur);
+  const diff=Math.round((fromKey(today)-d)/864e5);
+  $("dayTitle").textContent=diff===0?"Bugün":diff===1?"Dün":d.toLocaleDateString("tr-TR",{weekday:"long"});
+  $("daySub").textContent=d.toLocaleDateString("tr-TR",{day:"numeric",month:"long"});
+  $("next").disabled=cur>=today;
+
+  const eaten=eatTotal(cur), parts=burnParts(cur), burned=parts?parts.bmr+parts.daily+parts.sport:0;
+  const C=2*Math.PI*80, ring=$("ring");ring.style.strokeDasharray=C;
+  $("eaten").textContent=fmt(eaten);
+  const bb=$("burnBox");bb.innerHTML="";
+  if(parts){
+    const left=burned-eaten;
+    ring.style.strokeDashoffset=C*(1-Math.min(eaten/burned,1));
+    $("plate").classList.toggle("over",left<0);
+    $("big").textContent=fmt(Math.abs(left));
+    $("bigLabel").textContent=left<0?"kcal fazla aldın":"kcal kaldı";
+    $("burnTxt").textContent=fmt(burned);
+    const segs=[[parts.bmr,"Bazal","var(--plum)","b"],[parts.daily,"Günlük hareket","var(--plum2)","b2"],[parts.sport,"Spor","#E2A03F","s"]];
+    const g=document.createElement("div");g.className="bb";
+    const bar=document.createElement("div");bar.className="bbar";
+    segs.forEach(([v,,c])=>{if(v>0){const i=document.createElement("i");i.style.flex=String(v);i.style.background=c;bar.appendChild(i);}});
+    const lg=document.createElement("div");lg.className="legend";
+    segs.forEach(([v,l,,d])=>{const sp=document.createElement("span");const dt=document.createElement("i");dt.className="dot "+d;const b=document.createElement("b");b.textContent=fmt(v);sp.append(dt,l+" ",b);lg.appendChild(sp);});
+    g.append(bar,lg);bb.appendChild(g);
+  }else{
+    ring.style.strokeDashoffset=C;$("plate").classList.remove("over");
+    $("big").textContent=fmt(eaten);$("bigLabel").textContent="kcal aldın";$("burnTxt").textContent="–";
+    const s=document.createElement("button");s.className="setup";
+    s.innerHTML="<b>Yaktığın kaloriyi hesaplayalım</b><span>Yaş, boy ve kilonu gir; bazal metabolizmanı ve günlük harcamanı hesaplayayım.</span>";
+    s.onclick=openProfile;bb.appendChild(s);
+  }
+
+  ring.style.opacity=eaten>0?"1":"0";
+  renderLoss(eaten,burned,today);
+  const entries=state.days[cur]||[];
+  const box=$("meals");box.innerHTML="";
+  MEALS.forEach(([id,name])=>{
+    const list=entries.filter(e=>e.meal===id);
+    box.appendChild(card(MEAL_ICON[id],name,list.length?fmt(list.reduce((a,e)=>a+e.kcal,0))+" kcal":"Henüz eklenmedi",
+      list.map(e=>[e.name,e.kcal,()=>removeEntry(e.id)]),()=>openAdd(id)));
+  });
+
+  const ex=state.ex[cur]||[];
+  const el=$("exList");el.innerHTML="";
+  el.appendChild(card(["🏃","var(--t5)"],"Spor",ex.length?fmt(exTotal(cur))+" kcal yaktın":"Bugün spor yaptıysan ekle",
+    ex.map(e=>[e.name+(e.min?", "+e.min+" dk":""),e.kcal,()=>removeEx(e.id)]),openEx));
+
+  /* week */
+  const bars=$("bars");bars.innerHTML="";
+  const days=[];for(let i=6;i>=0;i--){const x=fromKey(cur);x.setDate(x.getDate()-i);days.push(keyOf(x));}
+  const max=Math.max(1,...days.map(k=>Math.max(eatTotal(k),burnTotal(k))))*1.1;
+  days.forEach(k=>{const t=eatTotal(k),bn=burnTotal(k);const b=document.createElement("button");b.className="bar"+(k===cur?" on":"")+(bn&&t>bn?" over":"");
+    b.setAttribute("aria-label",fromKey(k).toLocaleDateString("tr-TR",{weekday:"long",day:"numeric",month:"long"})+": "+fmt(t)+" kcal alındı"+(bn?", "+fmt(bn)+" kcal yakıldı":""));
+    const i=document.createElement("i");i.style.height=Math.max(3,(t/max)*100)+"px";
+    const em=document.createElement("em");em.textContent=fromKey(k).toLocaleDateString("tr-TR",{weekday:"short"}).slice(0,3);
+    b.append(i,em);
+    if(bn){const s=document.createElement("s");s.style.bottom=(22+(bn/max)*100)+"px";b.appendChild(s);}
+    b.onclick=()=>{cur=k;render()};bars.appendChild(b);});
+  renderWeight(days);
+}
+
+/* estimated loss: ~7700 kcal ≈ 1 kg */
+const KCAL_PER_G=7.7;
+const fmtG=g=>{g=Math.abs(g);return g>=1000?fmtKg(g/1000)+" kg":fmt(g)+" g"};
+function renderLoss(eaten,burned,today){
+  const box=$("lossBox");box.innerHTML="";
+  if(!burned||!(state.days[cur]||[]).length)return;
+  const g=(burned-eaten)/KCAL_PER_G;
+  const d=document.createElement("div");d.className="loss"+(g<0?" gain":"");
+  const b=document.createElement("b");b.textContent=(g>=0?"−":"+")+fmtG(g);
+  const p=document.createElement("p");
+  const who=cur===today?"Bugün":"Bu gün";
+  p.textContent=g>=0?who+" tahminen bu kadar verdin":who+" tahminen bu kadar aldın";
+  const sp=document.createElement("span");
+  sp.textContent=(cur===today?"Şu ana kadar girdiklerine göre, gün bitince netleşir. ":"")+"Yaklaşık 7.700 kcal ≈ 1 kg hesabıyla.";
+  p.appendChild(sp);d.append(b,p);box.appendChild(d);
+}
+
+/* weight */
+const fmtKg=n=>n.toLocaleString("tr-TR",{minimumFractionDigits:1,maximumFractionDigits:1});
+function latestWeight(){const ks=Object.keys(state.weights).sort();return ks.length?state.weights[ks[ks.length-1]]:null;}
+function renderWeight(days){
+  const box=$("wBox");box.innerHTML="";
+  let est=0,n=0;days.forEach(k=>{const bn=burnTotal(k);if(bn&&(state.days[k]||[]).length){est+=(bn-eatTotal(k))/KCAL_PER_G;n++;}});
+  $("wEst").textContent=n>=2?"Son 7 günde kaloriye göre tahmini "+(est>=0?"verdiğin: ":"aldığın: ")+fmtG(est)+" ("+n+" gün kayıtlı)":"";
+  const keys=Object.keys(state.weights).filter(k=>k<=cur).sort();
+  $("wAdd").textContent=state.weights[cur]!=null?"Düzenle":"Tartıl";
+  if(!keys.length){box.appendChild(emptyBtn("Henüz kilo kaydı yok. Tartıldıkça değişimi burada görürsün.",openW));return;}
+  const last=keys[keys.length-1], lastW=state.weights[last];
+  const card=document.createElement("div");card.className="wcard";
+  const now=document.createElement("div");now.className="wnow";
+  const b=document.createElement("b");b.textContent=fmtKg(lastW)+" kg";now.appendChild(b);
+  const info=document.createElement("span");
+  let txt=last===cur?"":fromKey(last).toLocaleDateString("tr-TR",{day:"numeric",month:"long"})+" tartısı";
+  const first=keys[0];
+  if(first!==last){const dlt=lastW-state.weights[first];const sgn=dlt>0?"+":dlt<0?"−":"±";
+    txt+=(txt?", ":"")+sgn+fmtKg(Math.abs(dlt))+" kg ("+fromKey(first).toLocaleDateString("tr-TR",{day:"numeric",month:"long"})+" tarihinden beri)";}
+  info.textContent=txt;now.appendChild(info);card.appendChild(now);
+  const pts=keys.slice(-30);
+  if(pts.length>1){
+    const W=320,H=110,pl=4,pr=34,pt=8,pb=18;
+    const vals=pts.map(k=>state.weights[k]);let lo=Math.min(...vals),hi=Math.max(...vals);
+    if(hi-lo<1){const m=(hi+lo)/2;lo=m-.5;hi=m+.5;}
+    const t0=fromKey(pts[0]).getTime(),t1=fromKey(pts[pts.length-1]).getTime();
+    const x=k=>pl+((fromKey(k).getTime()-t0)/(t1-t0))*(W-pl-pr);
+    const y=v=>pt+(1-(v-lo)/(hi-lo))*(H-pt-pb);
+    const d=pts.map((k,i)=>(i?"L":"M")+x(k).toFixed(1)+" "+y(state.weights[k]).toFixed(1)).join(" ");
+    const lab=k=>fromKey(k).toLocaleDateString("tr-TR",{day:"numeric",month:"short"});
+    card.insertAdjacentHTML("beforeend",'<svg class="wchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Kilo grafiği">'+
+      '<path class="ln" d="'+d+'"/>'+
+      '<text class="lbl" x="'+(W-pr+6)+'" y="'+(y(hi)+4)+'">'+fmtKg(hi)+'</text>'+
+      '<text class="lbl" x="'+(W-pr+6)+'" y="'+(y(lo)+4)+'">'+fmtKg(lo)+'</text>'+
+      '<text class="lbl" x="'+pl+'" y="'+H+'">'+lab(pts[0])+'</text>'+
+      '<text class="lbl" x="'+(W-pr)+'" y="'+H+'" text-anchor="end">'+lab(pts[pts.length-1])+'</text></svg>');
+  }
+  const ul=document.createElement("ul");ul.className="wlist";
+  keys.slice(-5).reverse().forEach(k=>{const li=document.createElement("li");const a=document.createElement("span");
+    a.textContent=fromKey(k).toLocaleDateString("tr-TR",{day:"numeric",month:"long",weekday:"short"});
+    const c=document.createElement("span");c.textContent=fmtKg(state.weights[k])+" kg";li.append(a,c);ul.appendChild(li);});
+  card.appendChild(ul);box.appendChild(card);
+}
+function openW(){
+  const d=fromKey(cur),today=keyOf(new Date());
+  $("wDate").textContent=(cur===today?"Bugünkü":d.toLocaleDateString("tr-TR",{day:"numeric",month:"long"})+" tarihli")+" kilon (kg)";
+  const v=state.weights[cur];$("fW").value=v!=null?fmtKg(v):"";$("wErr").hidden=true;$("delW").hidden=v==null;
+  show($("wSheet"));
+}
+function syncProfileWeight(){const w=latestWeight();if(state.profile&&w&&state.profile.weight!==w){state.profile=Object.assign({},state.profile,{weight:w});pushSettings();}}
+const MEAL_ICON={kahvalti:["☕","var(--t1)"],ogle:["🥗","var(--t2)"],aksam:["🍲","var(--t3)"],ara:["🍎","var(--t4)"]};
+function card([icon,tint],name,sub,rows,onAdd){
+  const c=document.createElement("section");c.className="mc";
+  const h=document.createElement("div");h.className="mh";
+  const ic=document.createElement("span");ic.className="ico";ic.style.setProperty("--t",tint);ic.textContent=icon;ic.setAttribute("aria-hidden","true");
+  const t=document.createElement("div");t.className="mt";const b=document.createElement("b");b.textContent=name;const sp=document.createElement("span");sp.textContent=sub;t.append(b,sp);
+  const a=document.createElement("button");a.className="add";a.setAttribute("aria-label",name+" ekle");
+  a.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';a.onclick=onAdd;
+  h.append(ic,t,a);c.appendChild(h);
+  if(rows.length)c.appendChild(itemList(rows));
+  return c;
+}
+function emptyBtn(text,fn){const em=document.createElement("button");em.className="empty";em.style.width="100%";em.style.textAlign="left";em.textContent=text;em.onclick=fn;return em;}
+function itemList(rows){const ul=document.createElement("ul");ul.className="items";
+  rows.forEach(([name,kcal,del])=>{const li=document.createElement("li");
+    const n=document.createElement("span");n.className="n";n.textContent=name;
+    const k=document.createElement("span");k.className="k";k.textContent=fmt(kcal)+" kcal";
+    const b=document.createElement("button");b.className="del";b.setAttribute("aria-label",name+" sil");b.innerHTML=X;b.onclick=del;
+    li.append(n,k,b);ul.appendChild(li);});
+  return ul;}
+
+/* data ops */
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function addEntries(items){
+  const list=state.days[cur]||(state.days[cur]=[]);
+  items.forEach(it=>{list.push({id:newId(),name:it.name,kcal:Math.round(it.kcal),meal});
+    state.recent=[{name:it.name,kcal:Math.round(it.kcal)},...state.recent.filter(r=>r.name.toLowerCase()!==it.name.toLowerCase())].slice(0,12);});
+  saveLocal();pushDay(cur);pushSettings();render();
+}
+function removeEntry(id){state.days[cur]=(state.days[cur]||[]).filter(e=>e.id!==id);saveLocal();pushDay(cur);render();}
+function removeEx(id){state.ex[cur]=(state.ex[cur]||[]).filter(e=>e.id!==id);saveLocal();pushDay(cur);render();}
+
+/* sheets */
+let openSheet=null;
+function show(el){if(openSheet)openSheet.classList.remove("show");openSheet=el;$("scrim").classList.add("show");el.classList.add("show");}
+function hide(){if(!openSheet)return;openSheet.classList.remove("show");$("scrim").classList.remove("show");openSheet=null;}
+$("scrim").onclick=hide;
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=hide);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")hide()});
+
+/* food */
+function renderSeg(){const seg=$("seg");seg.innerHTML="";MEALS.forEach(([id,name])=>{const b=document.createElement("button");b.textContent=name;b.setAttribute("aria-pressed",id===meal);b.onclick=()=>{meal=id;renderSeg()};seg.appendChild(b);});}
+function renderChips(){const c=$("chips");c.innerHTML="";$("recentWrap").hidden=!state.recent.length;
+  state.recent.forEach(r=>{const b=document.createElement("button");b.className="chip";b.textContent=r.name;const k=document.createElement("b");k.textContent=fmt(r.kcal);b.appendChild(k);
+    b.onclick=()=>{addEntries([r]);hide();};c.appendChild(b);});}
+function openAdd(m){meal=m||(cur===keyOf(new Date())?defaultMeal():meal);renderSeg();renderChips();
+  $("fName").value="";$("fKcal").value="";$("err").hidden=true;pick=null;renderPick();renderSugg();
+  show($("addSheet"));}
+$("fab").onclick=()=>openAdd();
+function err(msg){$("err").textContent=msg;$("err").hidden=false;}
+$("addOne").onclick=()=>{
+  const name=$("fName").value.trim(), kcal=Number($("fKcal").value);
+  if(!name){err("Ne yediğini yaz.");$("fName").focus();return;}
+  if(!(kcal>0)){err("Kaloriyi gir ya da listeden bir yemek seç.");$("fKcal").focus();return;}
+  addEntries([{name,kcal}]);hide();
+};
+$("fName").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const l=searchFoods($("fName").value);if(!pick&&l.length)choose(l[0]);else if(!pick)$("fKcal").focus();}});
+$("fKcal").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addOne").click();}});
+
+let pick=null,pMult=1,pGram="";
+const fmtQ=n=>n.toLocaleString("tr-TR",{maximumFractionDigits:2});
+function unitWord(f){const m=f.p.match(/^1 (.+)$/);return m?m[1]:"porsiyon";}
+function qtyText(f,q){const m=f.p.match(/^1 (.+)$/);return m?fmtQ(q)+" "+m[1]:(q===1?f.p:fmtQ(q)+" × "+f.p);}
+function pickKcal(){if(!pick)return 0;const g=Number(pGram);return Math.round(g>0&&pick.g?pick.k/pick.g*g:pick.k*pMult);}
+function pickName(){const g=Number(pGram);if(g>0&&pick.g)return pick.n+" ("+fmt(g)+" "+unitOf(pick)+")";
+  return pick.n+" ("+qtyText(pick,pMult)+")";}
+function unitOf(f){return f.c==="İçecek"||/^(süt|ayran|kefir|badem sütü|yulaf sütü)/i.test(f.n.toLocaleLowerCase("tr"))?"ml":"g";}
+function renderSugg(){const ul=$("sugg");ul.innerHTML="";const list=pick?[]:searchFoods($("fName").value);ul.hidden=!list.length;
+  list.forEach(f=>{const li=document.createElement("li");const b=document.createElement("button");
+    const n=document.createElement("span");n.className="n";n.textContent=f.n;const sm=document.createElement("small");sm.textContent=f.p+(f.g?" · "+f.g+" "+unitOf(f):"");n.appendChild(sm);
+    const k=document.createElement("span");k.className="k";k.textContent=fmt(f.k)+" kcal";b.append(n,k);b.onclick=()=>choose(f);li.appendChild(b);ul.appendChild(li);});}
+function choose(f){pick=f;pMult=1;pGram="";$("fName").value=f.n;$("err").hidden=true;renderPick();renderSugg();}
+function renderPick(){$("pick").hidden=!pick;$("manual").hidden=!!pick;if(!pick)return;
+  $("pkName").textContent=pick.n;$("pkPor").textContent="1 porsiyon: "+pick.p+(pick.g?" ("+pick.g+" "+unitOf(pick)+")":"")+", "+fmt(pick.k)+" kcal";
+  const usingGram=Number(pGram)>0;
+  document.querySelector(".step").classList.toggle("dim",usingGram);
+  const u=unitWord(pick);$("pkUnit").textContent=u;
+  $("pkQtyLbl").textContent=u==="porsiyon"?"Kaç porsiyon? ("+pick.p+")":"Kaç "+u+"?";
+  if(document.activeElement!==$("pkQty"))$("pkQty").value=fmtQ(pMult);
+  $("pkMinus").disabled=pMult<=0.5;
+  $("pkGramWrap").hidden=!pick.g;$("pkGramLbl").textContent="ya da "+(unitOf(pick)==="ml"?"ml":"gram")+" olarak";
+  $("pkKcal").textContent=fmt(pickKcal())+" kcal";}
+$("fName").addEventListener("input",()=>{if(pick&&$("fName").value!==pick.n){pick=null;renderPick();}renderSugg();});
+function setQty(v){pMult=Math.min(99,Math.max(0.5,Math.round(v*2)/2));pGram="";$("pkGram").value="";renderPick();}
+$("pkMinus").onclick=()=>setQty(pMult-(pMult>1?1:0.5));
+$("pkPlus").onclick=()=>setQty(pMult+(pMult>=1?1:0.5));
+$("pkQty").addEventListener("input",()=>{const v=Number($("pkQty").value.replace(",","."));if(v>0){pMult=Math.min(99,v);pGram="";$("pkGram").value="";renderPick();}});
+$("pkQty").addEventListener("blur",()=>{$("pkQty").value=fmtQ(pMult);});
+$("pkQty").addEventListener("focus",()=>{$("pkQty").select();});
+$("pkQty").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("pkAdd").click();}});
+$("pkClear").onclick=()=>{pick=null;$("fName").value="";renderPick();renderSugg();$("fName").focus();};
+$("pkGram").addEventListener("input",()=>{pGram=$("pkGram").value;renderPick();});
+$("pkGram").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("pkAdd").click();}});
+$("pkAdd").onclick=()=>{if(!pick)return;const k=pickKcal();if(!(k>=0))return;addEntries([{name:pickName(),kcal:k}]);hide();};
+
+/* exercise */
+let sel=[];
+function renderActs(){const a=$("acts");a.innerHTML="";
+  ACTS.forEach(([n],i)=>{const b=document.createElement("button");b.textContent=n;b.setAttribute("aria-pressed",sel.some(x=>x.i===i));
+    b.onclick=()=>{const at=sel.findIndex(x=>x.i===i);if(at>=0)sel.splice(at,1);else sel.push({i,min:"",name:"",kcal:""});renderActs();renderRows(true);};a.appendChild(b);});}
+function rowKcal(x){const met=ACTS[x.i][1];return met?exKcal(met,Number(x.min)||0):(Math.round(Number(x.kcal))||0);}
+function inp(ph,val,mode,on){const e=document.createElement("input");e.className="";e.placeholder=ph;e.value=val;e.inputMode=mode;if(mode==="numeric")e.type="number";e.oninput=()=>{on(e.value);exTotalPrev();};return e;}
+function renderRows(focusLast){const ul=$("exRows");ul.innerHTML="";ul.hidden=!sel.length;$("exPrev").hidden=!sel.length;
+  let lastInput=null;
+  sel.forEach((x,idx)=>{const li=document.createElement("li");li.className="exr";const met=ACTS[x.i][1];
+    const t=document.createElement("div");t.className="t";const b=document.createElement("b");b.textContent=ACTS[x.i][0];
+    const k=document.createElement("span");k.id="rk"+idx;t.append(b,k);
+    const del=document.createElement("button");del.className="del";del.setAttribute("aria-label",ACTS[x.i][0]+" çıkar");del.innerHTML=X;del.onclick=()=>{sel.splice(idx,1);renderActs();renderRows();};t.appendChild(del);
+    li.appendChild(t);
+    const g=document.createElement("div");g.className="g";
+    if(!met){const n=inp("Ne yaptın?",x.name,"text",v=>x.name=v);g.appendChild(n);lastInput=lastInput||n;}
+    const m=inp("Dakika",x.min,"numeric",v=>x.min=v);m.setAttribute("aria-label",ACTS[x.i][0]+" süresi (dakika)");g.appendChild(m);
+    if(met){const sm=document.createElement("small");sm.textContent="dakika";g.appendChild(sm);}
+    else{const kc=inp("kcal",x.kcal,"numeric",v=>x.kcal=v);kc.setAttribute("aria-label","Yakılan kalori");g.appendChild(kc);}
+    li.appendChild(g);ul.appendChild(li);
+    if(idx===sel.length-1)lastInput=met?m:g.firstChild;});
+  exTotalPrev();
+  if(focusLast&&lastInput&&sel.length)lastInput.focus({preventScroll:false});
+}
+function exTotalPrev(){let tot=0;sel.forEach((x,idx)=>{const k=rowKcal(x);tot+=k;const el=$("rk"+idx);if(el)el.textContent=fmt(k)+" kcal";});$("exKcal").textContent=fmt(tot)+" kcal";}
+function openEx(){
+  if(!state.profile){openProfile();$("pErr").textContent="Sporda yakılan kaloriyi hesaplamak için önce profilini doldur.";$("pErr").hidden=false;return;}
+  sel=[];$("exErr").hidden=true;renderActs();renderRows();show($("exSheet"));}
+$("fabEx").onclick=openEx;
+$("addEx").onclick=()=>{
+  const e=m=>{$("exErr").textContent=m;$("exErr").hidden=false;};
+  if(!sel.length){e("En az bir spor seç.");return;}
+  for(const x of sel){const nm=ACTS[x.i][1]?ACTS[x.i][0]:"Diğer";const min=Math.round(Number(x.min));
+    if(!ACTS[x.i][1]&&!x.name.trim()){e("Diğer için ne yaptığını yaz.");return;}
+    if(!(min>0&&min<=600)){e(nm+" için kaç dakika yaptığını yaz.");return;}
+    if(!ACTS[x.i][1]&&!(Number(x.kcal)>0)){e("Diğer için yaktığın kaloriyi yaz.");return;}}
+  const list=state.ex[cur]||(state.ex[cur]=[]);
+  sel.forEach(x=>{const met=ACTS[x.i][1];list.push({id:newId(),name:met?ACTS[x.i][0]:x.name.trim().slice(0,60),min:Math.round(Number(x.min)),kcal:rowKcal(x)});});
+  saveLocal();pushDay(cur);hide();render();
+};
+
+
+let pSex="f",pAct=1.2;
+function renderProfileCtl(){
+  const s=$("sexSeg");s.innerHTML="";[["f","Kadın"],["m","Erkek"]].forEach(([v,l])=>{const b=document.createElement("button");b.textContent=l;b.setAttribute("aria-pressed",v===pSex);b.onclick=()=>{pSex=v;renderProfileCtl();};s.appendChild(b);});
+  const o=$("actOpts");o.innerHTML="";LEVELS.forEach(([v,t,d])=>{const b=document.createElement("button");b.setAttribute("aria-pressed",v===pAct);
+    const bt=document.createElement("b");bt.textContent=t;const sp=document.createElement("span");sp.textContent=d;b.append(bt,sp);b.onclick=()=>{pAct=v;renderProfileCtl();};o.appendChild(b);});
+  pPreview();
+}
+function readP(){return{sex:pSex,age:Math.round(Number($("pAge").value)),height:Math.round(Number($("pH").value)),weight:Math.round(Number($("pW").value.replace(",","."))*10)/10,act:pAct};}
+function validP(p){return p.age>=14&&p.age<=100&&p.height>=120&&p.height<=230&&p.weight>=30&&p.weight<=300;}
+function pPreview(){const p=readP();$("pBmr").textContent=validP(p)?fmt(bmr(p))+" kcal":"– kcal";}
+["pAge","pH","pW"].forEach(id=>$(id).addEventListener("input",pPreview));
+function openProfile(){const p=state.profile;
+  pSex=p?p.sex:"f";pAct=p?p.act:1.2;
+  $("pAge").value=p?p.age:"";$("pH").value=p?p.height:"";
+  const w=p?p.weight:latestWeight();$("pW").value=w?String(w).replace(".",","):"";
+  $("pErr").hidden=true;renderProfileCtl();show($("setSheet"));}
+$("gear").onclick=openProfile;
+$("wAdd").onclick=openW;
+$("saveW").onclick=()=>{const v=Number($("fW").value.replace(",",".").trim());
+  if(!(v>=30&&v<=300)){$("wErr").textContent="Geçerli bir kilo gir, örneğin 72,4.";$("wErr").hidden=false;$("fW").focus();return;}
+  state.weights[cur]=Math.round(v*10)/10;syncProfileWeight();saveLocal();pushWeights();hide();render();};
+$("fW").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("saveW").click();}});
+$("delW").onclick=()=>{delete state.weights[cur];syncProfileWeight();saveLocal();pushWeights();hide();render();};
+$("saveP").onclick=()=>{const p=readP();
+  if(!validP(p)){$("pErr").textContent="Yaş, boy ve kiloyu kontrol et.";$("pErr").hidden=false;return;}
+  state.profile=p;const t=keyOf(new Date());if(latestWeight()!==p.weight){state.weights[t]=p.weight;pushWeights();}
+  saveLocal();pushSettings();hide();render();};
+
+$("prev").onclick=()=>{const d=fromKey(cur);d.setDate(d.getDate()-1);cur=keyOf(d);render();};
+$("next").onclick=()=>{const d=fromKey(cur);d.setDate(d.getDate()+1);const t=keyOf(new Date());cur=keyOf(d)>t?t:keyOf(d);render();};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render();});
+
+$("syncNote").textContent="Kayıtların sadece bu telefonda saklanıyor.";
+render();initCloud();
+})();
+</script>
+</body>
+</html>
